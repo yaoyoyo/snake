@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by haitong on 16/12/21.
@@ -23,12 +24,12 @@ public class SnakeView extends View {
     private final int DIRECTION_R = 0x0110;
     private final int DIRECTION_B = 0x1100;
 
-    private final int CANVAS_REFRESH_INTERVAL = 1000;
+    private final int CANVAS_REFRESH_INTERVAL = 300;
 
-    private final int APPLE_STROKE_WIDTH = 100;
-    private final int SNAKE_STROKE_WIDTH = 100;
+    private final int APPLE_STROKE_WIDTH = 50;
+    private final int SNAKE_STROKE_WIDTH = 50;
 
-    private final int MOVE_DISTANCE = 100;
+    private final int MOVE_DISTANCE = 50;
 
     private final Paint applePaint = new Paint();
     private final Paint snakePaint = new Paint();
@@ -38,6 +39,11 @@ public class SnakeView extends View {
 
     private int currDirection = DIRECTION_R;
     private int lastDirection = currDirection;
+
+    private int hCount;
+    private int vCount;
+
+    private Random random = new Random();
 
     private final Runnable refresh = new Runnable() {
         @Override
@@ -53,6 +59,7 @@ public class SnakeView extends View {
 
     public SnakeView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        initBound();
         initPaint();
         initApple();
         initSnake();
@@ -63,6 +70,13 @@ public class SnakeView extends View {
         initSnake();
         currDirection = DIRECTION_R;
         lastDirection = DIRECTION_R;
+    }
+
+    private void initBound() {
+        int width = ScreenUtils.getScreenWidth(getContext());
+        int height = ScreenUtils.getScreenHeight(getContext());
+        hCount = width / MOVE_DISTANCE;
+        vCount = height / MOVE_DISTANCE;
     }
 
     private void initPaint() {
@@ -77,8 +91,8 @@ public class SnakeView extends View {
     }
 
     private void initSnake() {
-        Point head = new Point(400, 500);
-        Point body = new Point(300, 500);
+        Point head = new Point(300, 500);
+        Point body = new Point(250, 500);
         Point tail = new Point(200, 500);
         snakeBody.clear();
         snakeBody.add(head);
@@ -91,8 +105,6 @@ public class SnakeView extends View {
     }
 
     private void updateSnake() {
-        snakeBody.remove(snakeBody.size() - 1);
-
         Point head = snakeBody.get(0);
         Point temp = new Point(head);
         switch (currDirection) {
@@ -118,7 +130,8 @@ public class SnakeView extends View {
             reset();
             return;
         }
-        if (temp.x < 100 || temp.x > 1800 || temp.y < 100 || temp.y > 900) {
+        if (temp.x < MOVE_DISTANCE * 2 || temp.x > MOVE_DISTANCE * hCount
+                || temp.y < MOVE_DISTANCE * 2 || temp.y > MOVE_DISTANCE * vCount) {
             //蛇的头部撞到了墙，GAME OVER!
             Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_LONG).show();
             reset();
@@ -127,6 +140,21 @@ public class SnakeView extends View {
 
         snakeBody.add(0, temp);
         lastDirection = currDirection;
+
+        if (snakeBody.contains(apple)) {
+            updateApple();
+        } else {
+            snakeBody.remove(snakeBody.size() - 1);
+        }
+    }
+
+    private void updateApple() {
+        int x = (2 + random.nextInt(hCount)) * MOVE_DISTANCE;
+        int y = (2 + random.nextInt(vCount)) * MOVE_DISTANCE;
+        apple.set(x, y);
+        if (snakeBody.contains(apple)) {
+            updateApple();
+        }
     }
 
     @Override

@@ -132,11 +132,8 @@ public class SnakeView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        int size = snakeBody.size();
-        for (int i = 0; i < size - 1; i++) {
-            Point p1 = snakeBody.get(i);
-            Point p2 = snakeBody.get(i + 1);
-            canvas.drawLine(p1.x, p1.y, p2.x, p2.y, snakePaint);
+        for (Point point : snakeBody) {
+            canvas.drawPoint(point.x, point.y, snakePaint);
         }
         canvas.drawPoint(apple.x, apple.y, applePaint);
         this.postDelayed(refresh, CANVAS_REFRESH_INTERVAL);

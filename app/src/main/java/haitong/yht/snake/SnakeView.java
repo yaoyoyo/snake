@@ -6,7 +6,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,15 +18,15 @@ import java.util.List;
  */
 public class SnakeView extends View {
 
-    private final int DIRECTION_L = 0x0000;
-    private final int DIRECTION_T = 0x0001;
-    private final int DIRECTION_R = 0x0002;
-    private final int DIRECTION_B = 0x0003;
+    private final int DIRECTION_L = 0x1001;
+    private final int DIRECTION_T = 0x0011;
+    private final int DIRECTION_R = 0x0110;
+    private final int DIRECTION_B = 0x1100;
 
     private final int CANVAS_REFRESH_INTERVAL = 1000;
 
-    private final int APPLE_STROKE_WIDTH = 40;
-    private final int SNAKE_STROKE_WIDTH = 20;
+    private final int APPLE_STROKE_WIDTH = 100;
+    private final int SNAKE_STROKE_WIDTH = 100;
 
     private final int MOVE_DISTANCE = 100;
 
@@ -34,11 +36,13 @@ public class SnakeView extends View {
     private final Point apple = new Point();
     private final List<Point> snakeBody = new ArrayList<>();
 
-    private int direction = DIRECTION_R;
+    private int currDirection = DIRECTION_R;
+    private int lastDirection = currDirection;
 
     private final Runnable refresh = new Runnable() {
         @Override
         public void run() {
+            updateSnake();
             SnakeView.this.invalidate();
         }
     };
@@ -54,6 +58,13 @@ public class SnakeView extends View {
         initSnake();
     }
 
+    private void reset() {
+        initApple();
+        initSnake();
+        currDirection = DIRECTION_R;
+        lastDirection = DIRECTION_R;
+    }
+
     private void initPaint() {
         applePaint.setAntiAlias(true);
         applePaint.setColor(Color.RED);
@@ -66,9 +77,12 @@ public class SnakeView extends View {
     }
 
     private void initSnake() {
-        Point head = new Point(600, 500);
+        Point head = new Point(400, 500);
+        Point body = new Point(300, 500);
         Point tail = new Point(200, 500);
+        snakeBody.clear();
         snakeBody.add(head);
+        snakeBody.add(body);
         snakeBody.add(tail);
     }
 
@@ -77,24 +91,42 @@ public class SnakeView extends View {
     }
 
     private void updateSnake() {
+        snakeBody.remove(snakeBody.size() - 1);
+
         Point head = snakeBody.get(0);
-        switch (direction) {
+        Point temp = new Point(head);
+        switch (currDirection) {
             case DIRECTION_L:
-                head.x -= MOVE_DISTANCE;
+                temp.x -= MOVE_DISTANCE;
                 break;
             case DIRECTION_T:
-                head.y -= MOVE_DISTANCE;
+                temp.y -= MOVE_DISTANCE;
                 break;
             case DIRECTION_R:
-                head.x += MOVE_DISTANCE;
+                temp.x += MOVE_DISTANCE;
                 break;
             case DIRECTION_B:
-                head.y += MOVE_DISTANCE;
+                temp.y += MOVE_DISTANCE;
                 break;
             default:
-                head.x += MOVE_DISTANCE;
+                temp.x += MOVE_DISTANCE;
                 break;
         }
+        if (snakeBody.contains(temp)) {
+            //蛇的头部撞到了自己，GAME OVER!
+            Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_LONG).show();
+            reset();
+            return;
+        }
+        if (temp.x < 100 || temp.x > 1800 || temp.y < 100 || temp.y > 900) {
+            //蛇的头部撞到了墙，GAME OVER!
+            Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_LONG).show();
+            reset();
+            return;
+        }
+
+        snakeBody.add(0, temp);
+        lastDirection = currDirection;
     }
 
     @Override
@@ -110,4 +142,31 @@ public class SnakeView extends View {
         this.postDelayed(refresh, CANVAS_REFRESH_INTERVAL);
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() != MotionEvent.ACTION_DOWN) {
+            return super.onTouchEvent(event);
+        }
+        float x = event.getX();
+        float y = event.getY();
+        int snakeX = snakeBody.get(0).x;
+        int snakeY = snakeBody.get(0).y;
+        if (Math.abs(x - snakeX) >= Math.abs(y - snakeY)) {
+            if (x > snakeX) {
+                currDirection = DIRECTION_R;
+            } else {
+                currDirection = DIRECTION_L;
+            }
+        } else {
+            if (y > snakeY) {
+                currDirection = DIRECTION_B;
+            } else {
+                currDirection = DIRECTION_T;
+            }
+        }
+        if ((currDirection & lastDirection) == 0) {
+            currDirection = lastDirection;
+        }
+        return super.onTouchEvent(event);
+    }
 }

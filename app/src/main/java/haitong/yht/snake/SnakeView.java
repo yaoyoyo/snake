@@ -24,7 +24,7 @@ public class SnakeView extends View {
     private final int DIRECTION_R = 0x0110;
     private final int DIRECTION_B = 0x1100;
 
-    private final int CANVAS_REFRESH_INTERVAL = 300;
+    private final int CANVAS_REFRESH_INTERVAL = 100;
 
     private final int APPLE_STROKE_WIDTH = 50;
     private final int SNAKE_STROKE_WIDTH = 50;
@@ -126,14 +126,14 @@ public class SnakeView extends View {
         }
         if (snakeBody.contains(temp)) {
             //蛇的头部撞到了自己，GAME OVER!
-            Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_SHORT).show();
             reset();
             return;
         }
         if (temp.x < MOVE_DISTANCE * 2 || temp.x > MOVE_DISTANCE * hCount
                 || temp.y < MOVE_DISTANCE * 2 || temp.y > MOVE_DISTANCE * vCount) {
             //蛇的头部撞到了墙，GAME OVER!
-            Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "GAME OVER!", Toast.LENGTH_SHORT).show();
             reset();
             return;
         }
@@ -149,8 +149,8 @@ public class SnakeView extends View {
     }
 
     private void updateApple() {
-        int x = (2 + random.nextInt(hCount)) * MOVE_DISTANCE;
-        int y = (2 + random.nextInt(vCount)) * MOVE_DISTANCE;
+        int x = (2 + random.nextInt(hCount - 2)) * MOVE_DISTANCE;
+        int y = (2 + random.nextInt(vCount - 2)) * MOVE_DISTANCE;
         apple.set(x, y);
         if (snakeBody.contains(apple)) {
             updateApple();
